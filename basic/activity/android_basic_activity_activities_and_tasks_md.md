@@ -1,6 +1,6 @@
 # Android开发之旅：活动与任务
 
-###引言
+### 引言
 
 介绍了Android应用程序的进程运行方式：每一个应用程序运行在它自己的Linux进程中。当应用程序中的任何代码需要执行时，Android将启动进程；当它不在需要且系统资源被其他应用程序请求时，Android将关闭进程。而且我们还知道了Android应用程序不像别的应用程序那样（有Main函数入口点），它没有单一的程序入口点，但是它必须要有四个组件中的一个或几个：活动（Activities） 、服务（Services） 、广播接收者（Broadcast receivers） 、内容提供者（Content providers）。且分别介绍它们的作用，及如何激活和关闭它们、如何在清单文件（AndroidManifest.xml）中声明它们及Intent过滤器。
 
@@ -12,7 +12,7 @@
 - 4、清除栈（Clearing the stack）
 - 5、启动任务（Starting tasks）
 
-###1、活动与任务概述
+### 1、活动与任务概述
 
 如前所述，一个活动（activity）能启动另一个活动，包括定义在别的应用程序中的活动。再次举例说明，假设你想让用户显示某地的街道地图。而且已经有了一个活动能做这个事情（假设这个活动叫做地图查看器），因此你的活动要做的就是将请求信息放进一个Intent对象，然后将它传给`startActivity()`。地图查看器就启动并显示出地图。当用户点击返回按钮之后，你的活动就会重新出现在屏幕上。
 
@@ -44,23 +44,23 @@ finishOnTaskLaunch
 ```
 接下来的小节将讨论这些标志和属性的作用，他们怎么交互，及使用的注意事项。
 
-###2、亲和度和新任务（Affinities and new tasks）
+### 2、亲和度和新任务（Affinities and new tasks）
 
 默认情况下，一个应用程序的所有活动互相之间都有一个亲和度（affinity）——也就是说，他们属于同一个任务的偏好（preference）。然而，也可以通过<activity>元素的taskAffinity属性为每个活动设置个体亲和度。定义在不同应用程序中的活动能够共享亲和度，同一个应用程序中的活动可以分配不一样的亲和度。亲和度发挥作用的两种情况：
 - 1）启动活动的Intent对象包含`FLAG_ACTIVITY_NEW_TASK`标志时；
 - 2）一个活动的allowTaskReparenting属性为"true"时。
 
-####FLAG_ACTIVITY_NEW_TASK标志
+#### FLAG_ACTIVITY_NEW_TASK标志
 
 如前所述，默认情况下，一个新的活动被启动到调用startActivity()方法的活动所在的任务。它被压入调用它的活动的栈中。但是，如果传递给方法的Intent对象包含`FLAG_ACTIVITY_NEW_TASK`标志，系统找一个不同的任务容纳活动。通常，顾名思义它表示一个新任务。但是，他并非一定如此。如果已经存在一个任务与新活动亲和度一样，该活动将启动到该任务。如果不是，则启动一个新任务。
 
-####allowTaskReparenting属性
+#### allowTaskReparenting属性
 
 如果一个活动的allowTaskReparenting属性为"true"，它可以从启动它的任务转移到与它有亲和度并转到前台运行的任务中。例如，假设一个天气预报的活动，但选择城市是一个旅游应用程序的一部分。它与同一个应用程序中的其他活动具有相同的亲和度，且允许重新选择父活动（reparenting）。你的一个活动启动天气预报活动，因此他初始是跟你的活动属于同一个任务。但是，当旅游应用程序切换到前台运行时，天气预报活动将被重新分配和显示到该任务。
 
 如果一个.apk文件，从用户的角度看包含不止一个“应用程序”，你可能要为与他们有关的些活动指定不一样的亲和度。
 
-###3、启动模式（Launch modes）
+### 3、启动模式（Launch modes）
 
 有四种不同的启动模式可以分配到`<activity>`元素的launchMody属性：
 ```
@@ -93,19 +93,19 @@ finishOnTaskLaunch
 
 注意到当一个活动的新实例被创建去处理新意图时，用户总是可以按返回键返回到之前的状态（之前的活动）。但是当一个已存在的活动实例去处理新意图是，用户不可以按返回键返回到意图到达之前的状态。
 
-###4、清除栈（Clearing the stack）
+### 4、清除栈（Clearing the stack）
 
 如果用户离开一个任务很长时间，系统将会清除根活动之外的活动。当用户再次返回到这个任务时，像用户离开时一样，仅显示初始的活动。这个想法是，一段时间后，用户可能已经放弃之前做的东西，及返回任务做新的事情。这是默认情况，有些活动属性可以用来控制和改变这个行为。
 
-####alwaysRetainTaskState属性
+#### alwaysRetainTaskState属性
 
 如果在任务的根活动中这个属性被设置为"true"，刚才描述的默认行为将不会发生。任务将保留所有的活动在它的栈中，甚至是离开很长一段时间。
 
-####clearTaskOnLaunch属性
+#### clearTaskOnLaunch属性
 
 如果在任务的根活动中这个属性被设置为"true"，只有用户离开就清除根活动之外的活动。换句话说，它与alwaysRetainTaskState截然相反。用户总是返回到任务的初始状态，甚至是只离开一会。
 
-####finishOnTaskLaunch属性
+#### finishOnTaskLaunch属性
 
 这个属性类似于clearTaskOnLaunch，但是它作用于单个活动，而不是整个任务。而且它能移除任何活动，包括根活动。当它被设置为"true"，任务本次会话的活动的部分还存在，如果用户离开并返回到任务时，它将不再存在。
 
@@ -113,7 +113,7 @@ finishOnTaskLaunch
 
 `FLAG_ACTIVITY_CLEAR_TOP`标志经常与`FLAG_ACTIVITY_NEW_TASK`一起使用。当一起使用时，这些标志的方式是定位到另一个任务中的已存在的活动并把它放到可以处理意图的位置。
 
-###5、启动任务（Starting tasks）
+### 5、启动任务（Starting tasks）
 
 通过给定活动一个意图过滤器`"android.intent.action.MAIN"`作为指定行为（action）和`"android.intent.category.LAUNCHER"`指定种类（category），活动就被设置为任务的入口点了。上篇Android开发之旅：应用程序基础及组件（续）第四节Intent过滤器中我们举了这样一个例子，它将导致该活动的图标（icon）和标签（label）显示在应用程序启动器，给用户启动它或启动之后任意时候返回到它。
 

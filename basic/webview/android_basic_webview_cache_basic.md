@@ -1,0 +1,14 @@
+在Android实际开发中，越来越多的应用开发采用webview技术，这里总结一下在使用webview技术时，如何缓存？
+Android为WebView设计非常多的实用功能，这其中就包含了缓存，WebView的缓存可以分为页面缓存和数据缓存。
+
+### 页面缓存
+
+是指加载一个网页时的html、JS、CSS等页面或者资源数据。这些缓存资源是由于浏览器的行为而产生，开发者只能通过配置HTTP响应头影响浏览器的行为才能间接地影响到这些缓存数据。
+他们的索引存放在/data/data/package_name/databases下。他们的文件存放在/data/data/package_name/cache/xxxwebviewcachexxx下。文件夹的名字在2.x和4.x上有所不同，但都文件夹名字中都包含webviewcache。
+
+### 数据缓存
+
+数据缓存分为两种：AppCache和DOMStorage（WebStorage）。他们是因为页面开发者的直接行为而产生。所有的缓存数据都由开发者直接完全地掌控。 AppCache使我们能够有选择的缓冲web浏览器中所有的东西，从页面、图片到脚本、css等等。尤其在涉及到应用于网站的多个页面上的CSS和JavaScript文件的时候非常有用。其大小目前通常是5M。
+在Android上需要手动开启（setAppCacheEnabled），并设置路径（setAppCachePath）和容量（setAppCacheMaxSize）Android中Webkit使用一个db文件来保存AppCache数据（my_path/ApplicationCache.db）
+如果需要存储一些简单的用key/value对即可解决的数据，DOM Storage是非常完美的方案。根据作用范围的不同，有Session Storage和Local Storage两种，分别用于会话级别的存储（页面关闭即消失）和本地化存储（除非主动删除，否则数据永远不会过期）。 在Android中可以手动开启DOM Storage（setDomStorageEnabled），设置存储路径（setDatabasePath） Android中Webkit会为DOM Storage产生两个文件（my_path/localstorage/http_h5.m.taobao.com_0.localstorage和my_path/localstorage/Databases.db）
+另外，在Android中清除缓存时，如果需要清除Local Storage的话，仅仅删除Local Storage的本地存储文件是不够的，内存里面有缓存数据。如果再次进入页面，Local Storage中的缓存数据同样存在。需要杀死程序运行的当前进程再重新启动才可以。
