@@ -2,19 +2,18 @@
 android: null
 ---
 
-# Android Developer Document
+# Android Developer 
 
-### This is a book about Android develop,the content from net.
 
 互联网的搬运工。
 
 ```
-Create  : Will He
+Create by : uncle cn
 Contact : e@isif.cn
 Blog    : www.isif.cn
 ```
 
 ---
 
-内容会不断的更新，不断的完善。
+[Book link](SUMMARY.md)
 
