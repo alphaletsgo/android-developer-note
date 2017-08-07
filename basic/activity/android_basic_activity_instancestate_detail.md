@@ -4,7 +4,7 @@
 
 首先来介绍`onSaveInstanceState()`和`onRestoreInstanceState()`。关于这两个方法，一些朋友可能在Android开发过程中很少用到，但在有时候掌握其用法会帮我们起到比较好的效果。尤其是在应用程序在不知道的情况下退出后，如何实现其数据保存的功能。先来让我们看下这两个方法的有什么样的作用。
 
-###1. 基本作用：
+### 1. 基本作用：
 
 Activity的`onSaveInstanceState()`和`onRestoreInstanceState()`并不是生命周期方法，它们不同于`onCreate()`、`onPause()`等生命周期方法，它们并不一定会被触发。当应用遇到意外情况（如：内存不足、用户直接按Home键）由系统销毁一个Activity时，`onSaveInstanceState()`会被调用。但是当用户主动去销毁一个Activity时，例如在应用中按返回键，`onSaveInstanceState()`就不会被调用。因为在这种情况下，用户的行为决定了不需要保存Activity的状态。通常`onSaveInstanceState()`只适合用于保存一些临时性的状态，而`onPause()`适合用于数据的持久化保存。
 
@@ -20,7 +20,7 @@ Activity的`onSaveInstanceState()`和`onRestoreInstanceState()`并不是生命�
 
 这就是`onSaveInstanceState()` 和 `onRestoreInstanceState()` 两个函数的基本作用和用法。
 
-###2. onSaveInstanceState() 什么时候调用
+### 2. onSaveInstanceState() 什么时候调用
 
 先看Application Fundamentals上的一段话：
 > Android calls onSaveInstanceState() before the activitybecomes vulnerable to being destroyed by the system, but does not bothercalling it when the instance is actually being destroyed by a user action (suchas pressing the BACK key).
@@ -44,20 +44,22 @@ Activity的`onSaveInstanceState()`和`onRestoreInstanceState()`并不是生命�
 
 总而言之，`onSaveInstanceState()`的调用遵循一个重要原则，即当系统存在“未经你许可”时销毁了我们的activity的可能时，则`onSaveInstanceState()`会被系统调用，这是系统的责任，因为它必须要提供一个机会让你保存你的数据（当然你不保存那就随便你了）。如果调用，调用将发生在`onPause()`或`onStop()`方法之前。（虽然测试时发现多数在`onPause()`前）
 
-###3. onRestoreInstanceState()什么时候调用
+### 3. onRestoreInstanceState()什么时候调用
 
 
 `onRestoreInstanceState()`被调用的前提是，activity A“确实”被系统销毁了，而如果仅仅是停留在有这种可能性的情况下，则该方法不会被调用，例如，当正在显示activity A的时候，用户按下HOME键回到主界面，然后用户紧接着又返回到activity A，这种情况下activity A一般不会因为内存的原因被系统销毁，故activity A的`onRestoreInstanceState`方法不会被执行 此也说明上二者，大多数情况下不成对被使用。
 
 `onRestoreInstanceState()`在`onStart()` 和 `onPostCreate(Bundle)`之间调用。
 
-###4. onSaveInstanceState()方法的默认实现
+### 4. onSaveInstanceState()方法的默认实现
 
 如果我们没有覆写`onSaveInstanceState()`方法, 此方法的默认实现会自动保存activity中的某些状态数据, 比如activity中各种UI控件的状态.。android应用框架中定义的几乎所有UI控件都恰当的实现了`onSaveInstanceState()`方法,因此当activity被摧毁和重建时, 这些UI控件会自动保存和恢复状态数据. 比如EditText控件会自动保存和恢复输入的数据,而CheckBox控件会自动保存和恢复选中状态.开发者只需要为这些控件指定一个唯一的ID(通过设置`android:id`属性即可), 剩余的事情就可以自动完成了.如果没有为控件指定ID, 则这个控件就不会进行自动的数据保存和恢复操作。
 
 由上所述, 如果我们需要覆写`onSaveInstanceState()`方法, 一般会在第一行代码中调用该方法的默认实现:`super.onSaveInstanceState(outState)`。
 
-###5. 是否需要重写onSaveInstanceState()方法
+	“注意：当activity中的onSaveInstanceState方法被调用时会根据View树来调用view中的onSaveInstanceState方法，系统组件在被定义时会在该方法里保存一些数据。同理onRestoreInstanceState方法也是一样的。”
+
+### 5. 是否需要重写onSaveInstanceState()方法
 
 既然该方法的默认实现可以自动的保存UI控件的状态数据, 那什么时候需要覆写该方法呢?
 
@@ -65,7 +67,7 @@ Activity的`onSaveInstanceState()`和`onRestoreInstanceState()`并不是生命�
 
 由于`onSaveInstanceState()`方法方法不一定会被调用, 因此不适合在该方法中保存持久化数据, 例如向数据库中插入记录等. 保存持久化数据的操作应该放在`onPause()`中。若是永久性值，则在`onPause()`中保存；若大量，则另开线程吧，别阻塞UI线程。
 
-###6. 引发activity销毁和重建的其它情况
+### 6. 引发activity销毁和重建的其它情况
 
 除了系统处于内存不足的原因会摧毁activity之外, 某些系统设置的改变也会导致activity的摧毁和重建. 例如改变屏幕方向(见上例), 改变设备语言设定, 键盘弹出等。
 

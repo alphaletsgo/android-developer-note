@@ -1,22 +1,25 @@
 # 通过AIDL调用Service
 
-在网上找的一些关于service的例子都比较简单，都是通过`startService("action")`启动service，然后通过`stopService("service")`停止service。只能启动和停止service没有发挥service的功能。下面我通过介绍关于AIDL启动service来控制音乐播放的例子来说明通过前台控制service的使用。
+我们通过控制音乐播放的小例子来初步认识一下AIDL。
 
-1.在工程的包中一个后缀为aidl的文件：
-```
-IMusicControlService.aidl
-```
-`package com.androidmanual.androidstud2.service`;--------包名一定要和当前工程的包名一样哦！
+### 1.创建aidl文件
+
+![img](/imgs/WX20170807-170603.png)
+
+首先创建IMusicControlService.aidl文件，包名一定要和当前工程的包名一样哦（如上图）！
+
 ```java
+package com.androidmanual.androidstud2.servic
+
 interface IMusicControlService
 {
 	voidplayMusic();-------->播放音乐
 	voidstopMusic();------->停止播放音乐
 }
 ```
-点击保存后，在gen/上述包名的目录下就创建了一个IMusicControlService.java文件了
+点击编译会自动生成IMusicControlService.java文件。
 
-2.在res/layout目录下创建布局文件：
+### 2.在res/layout目录下创建布局文件：
 
 startserviceactivity.xml
 ```xml
@@ -43,27 +46,36 @@ startserviceactivity.xml
         android:text="停止播放" />
 </LinearLayout>
 ```
-3.创建一个service类，在该类的内部实例化IMusicControlService中的`playMusic()`和`stopMusic()`接口
+### 3.创建一个TestService类，在该类的内部实例化IMusicControlService中的`playMusic()`和`stopMusic()`接口
 
 ```java
-private final IMusicControlService.Stub binder = new IMusicControlService.Stub() {
-	@Override
-	public void playMusic() throws RemoteException {
-		player = MediaPlayer.create(ControlMusicService.this,
-				R.raw.shanghaitan);
-		player.start();
-	}
-	@Override
-	public void stopMusic() throws RemoteException {
-		if (player.isPlaying()) {
-			player.stop();
-		}
-	}
-};
-```
-在该类的`onBind()`方法中返回上面实例的binder，即returnbinder;
+public class TestService extends Service {
+    public static final String TAG = "TestService";
+    public boolean isStop = false;
 
-4.创建StartServiceActivity类继承Activity类，在该类中通过ServiceConnection和后台的service连接
+
+    private final IMusicControlService.Stub binder = new IMusicControlService.Stub() {
+        @Override
+        public void playMusic() throws RemoteException {
+            Log.d(TAG,"play music ing");
+        }
+
+        @Override
+        public void stopMusic() throws RemoteException {
+            Log.d(TAG,"stop music end");
+            isStop = true;
+        }
+    };
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+}
+```
+在该类的`onBind()`方法中返回上面实例的binder，即`return binder`;
+
+### 4.创建StartServiceActivity类继承Activity类，在该类中通过ServiceConnection和后台的service连接
 
 ```java
 private final ServiceConnection serviceConnection = new ServiceConnection() {
