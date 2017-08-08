@@ -1,11 +1,11 @@
 # Android 跨进程通信（二）
 
 
-###2. 客户端实现：
+### 2. 客户端实现：
 
 （1）目录结构，如下图：
 
-![](imgs/a_b_aldl_03.jpg)
+![](/imgs/a_b_aldl_03.jpg)
 
 （2）将服务器端的IAIDLService.aidl，Person.aidl和Person.java文件拷贝到本工程中，如上图所示：
 
@@ -118,3 +118,4 @@ public class AIDLClientAcitivty extends Activity {
 	}
 }
 ```
+

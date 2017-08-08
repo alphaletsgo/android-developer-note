@@ -1,133 +1,320 @@
 # Android 使用【AIDL】调用外部服务
 
-在Android 中有一种服务说是服务其实倒不如说是一个接口，这个接口名为：Android Interface Definition Language ，这个接口可提供跨进程访问服务，英文缩写为:AIDL。
+前面我们已经详细介绍了如何使用aidl应用。接下来我们接着第一个音乐播放器的例子扩展至两个应用之间使用aidl通信，也就是这里所说的调用外部服务，这里我们使用Android studio进行开发部署。
 
-此种服务的好处在于，多个应用程序之间建立共同的服务机制，通过AIDL在不同应用程序之间达到数据的共享和数据相互操作，下面将通过一个DEMO 演示AIDL 是如何为应用程序之间提供服务的。
+1) 介绍完背景下面我们继续，首先我们来创建服务端程序，创建一个项目再创建一个android server模块和一个client模块，整体结构如下图：
 
-本文大纲为：
+![img](/imgs/WX20170808-133504.png)
 
-- 1、创建AIDL 服务端。
-- 2、创建AIDL 客户端。
-- 3、客户端调用服务端提供的服务接口。
-- 4、小结。
+2) 接着我们在server模块的main目录下创建一个aidl文件夹，然后再创建一个包`cn.isif.android.server`，在该包下创建 IMusicControlService.aidl 文件，内容如下：（这里的包名必须和项目的包名一致）
 
-本文要实现的功能大致如下：创建AIDL服务端，此服务端将提供一个Student的javabean提供客户端取得数据，因为aidl支持的数据类型比较简单，故这里建议把常用的数据类型的数据写入服务。
+```java 
+// IMusicControlService.aidl
+package cn.isif.android.server;
+// Declare any non-default types here with import statements
+import cn.isif.android.server.Music;
 
-1、创建AIDL 服务端
+interface IMusicControlService {
+    void playMusic();
+	void stopMusic();
+	void inLoadMusic(in Music m);
+	void outLoadMusic(out Music m);
+	void inOutLoadMusic(inout Music m);
 
-在Android 的src 文件夹下的任意包里面新建文件，后缀名为*.aidl，如下:
-
-```java
-import java.util.Map;
-interface IMyService {
-	Map getMap(String test_class, Student student);
-	Student getStudent();
 }
 ```
-Student 类是一个序列化的类，这里使用Parcelable 接口来序列化是Google 提供的一个比Serializable 效率更高的序列化类。Student 类代码如下：
+3) 由上面代码可以看出来我们使用了自定义的类，使用自定义的对象这种情况处理起来会比较复杂点，大致分为如下步骤：
+- 创建自定义类Music，该类必须实现Parcelable类，以及一些必须方法
 ```java
+package cn.isif.android.server;
+
 import android.os.Parcel;
 import android.os.Parcelable;
-public class Student implements Parcelable {
-	private int age;
-	private String name;
-	public int getAge() {
-		return age;
-	}
-	public void setAge(int age) {
-		this.age = age;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public static final Parcelable.Creator<Student> CREATOR = new Creator<Student>() {
-		@Override
-		public Student[] newArray(int size) {
-			return new Student[size];
-		}
-		@Override
-		public Student createFromParcel(Parcel source) {
-			return new Student(source);
-		}
-	};
-	public Student() {
-	}
-	public Student(Parcel pl) {
-		age = pl.readInt();
-		name = pl.readString();
-	}
-	@Override
-	public int describeContents() {
-		return 0;
-	}
-	@Override
-	public void writeToParcel(Parcel dest, int flags) {
-		// TODO Auto-generated method stub
-		dest.writeInt(age);
-		dest.writeString(name);
-	}
+
+/**
+ * Created by ola on 2017/8/7.
+ */
+
+public class Music implements Parcelable{
+    private int id;
+    private String name;
+
+    protected Music(Parcel in) {
+        id = in.readInt();
+        name = in.readString();
+    }
+
+    public Music(int id,String name){
+        this.id = id;
+        this.name = name;
+    }
+    
+    public Music(){}
+    
+    //在编译时，编译器告诉我必须提供如上两种构造方法，为了不让编译器报错我这里实现了这两种构造方法
+
+    public static final Creator<Music> CREATOR = new Creator<Music>() {
+        @Override
+        public Music createFromParcel(Parcel in) {
+            return new Music(in);
+        }
+
+        @Override
+        public Music[] newArray(int size) {
+            return new Music[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(id);
+        parcel.writeString(name);
+    }
+
+    /**
+     * 必须提供该方法，否则会抛异常
+     * @param source
+     */
+    public void readFromParcel(Parcel source) {
+        id = source.readInt();
+        name = source.readString();
+    }
 }
 ```
-在这里必须注意，编写javabean时必须注意如下三点：
-
-- 在Student 类中必须有一个静态常量，常量名必须是CREATOR，而且CREATOR 常量的数据类型必须是 `Parcelable.Creator`
-
-- 在writeToParcel 方法中需要将要序列化的值写入到 Parcel对象中。
-
-- 编写完Student 为时，必须再新建一个Student.aidl 文件，此文件输入以下内容：
-```
-parcelable Student; 
-```
-这里的书写是供上面我们说过的接口 *.aidl 文件导包时可以找到，并通过此文件找到Student类对象。
-
-如果上面的步骤顺利通过的话，Android 将会自动在gen 目录下R文件的相同目录生成一个以*.aidl 文件命名的*.java 文件，如下图：
-
-![](imgs/a_b_aldl_01.png)
-
-顺利生成成功后，我们再来编写一个AIDL 服务类，代码如下：
+- 创建Music.aidl文件，文件里只作声明
 ```java
-import java.util.HashMap;
-import java.util.Map;
+// Music.aidl
+package cn.isif.android.server;
+
+parcelable Music;
+
+```
+- 如果需要传输自定义对象必须在IMusicControlService.aidl 文件中作导入操作，不然会报异常，同时需要做in和out标识：
+
+![](/imgs/WechatIMG1469.jpeg)
+
+4) 创建一个service(TestService.class)
+```java
+package cn.isif.android.server;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 import android.os.RemoteException;
-public class MyService extends Service {
-	@Override
-	public IBinder onBind(Intent intent) {
-		return new MyServiceimpl();
-	}
-	public class MyServiceimpl extends IMyService.Stub {
-		@Override
-		public Student getStudent() throws RemoteException {
-			Student st = new Student();
-			st.setAge(18);
-			st.setName("terry");
-			return st;
-		}
-		@Override
-		public Map getMap(String testClass, Student student)
-				throws RemoteException {
-			Map<String, Object> map = new HashMap<String, Object>();
-			map.put("class", "五年级");
-			map.put("age", student.getAge());
-			map.put("name", student.getName());
-			return map;
-		}
-	}
-}
-```
-如上代码，MyService 服务类有一个子类并继承自我们上面生成的*.java 文件重写其中我们在*.aidl 中声明的两个接口方法，实现了其功能。上面IBinder 必须返回此服务类的子类对象，否则客户端将无法获得服务对象。
+import android.support.annotation.Nullable;
+import android.util.Log;
 
-最后，即然有服务的操作，那么就得在manifest文件中注册服务类，代码如下：
-```xml
-<service android:name=".MyService">
-	<intent-filter>
-		<action android:name="com.aidl.test.IMyService"></action>
-	</intent-filter>
-</service>
+/**
+ * Created by ola on 2017/8/7.
+ */
+
+public class TestService extends Service {
+    public static final String TAG = "TestService";
+    public boolean isStop = false;
+
+
+    private final IMusicControlService.Stub binder = new IMusicControlService.Stub() {
+        @Override
+        public void playMusic() throws RemoteException {
+            Log.d(TAG,"play music ing");
+        }
+
+        @Override
+        public void stopMusic() throws RemoteException {
+            Log.d(TAG,"stop music end");
+            isStop = true;
+        }
+
+        @Override
+        public void inLoadMusic(Music m) throws RemoteException {
+
+        }
+
+        @Override
+        public void outLoadMusic(Music m) throws RemoteException {
+
+        }
+
+        @Override
+        public void inOutLoadMusic(Music m) throws RemoteException {
+
+        }
+    };
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+}
+
 ```
-至此，服务端就己经开发完成了，下面接着开发客启端。
+5) 定义好service后我们还需要在manifest文件中配置一下，由于我们是外部调用所以我们必须配置intent-filter。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cn.isif.android.server">
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:name=".TestService">
+            <intent-filter>
+                <action android:name="cn.isif.TestServer" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>
+```
+好了，在该例子server中我们需要做的就这些，这个时候点击编译可能会报如下错误：
+![](/imgs/WX20170808-140528.png)
+
+这时，需要我们在grade文件中加入如下配置：
+```
+sourceSets {
+        main {
+//            manifest.srcFile 'src/main/AndroidManifest.xml'
+            java.srcDirs = ['src/main/java', 'src/main/aidl']
+//            resources.srcDirs = ['src/main/java', 'src/main/aidl']
+//            aidl.srcDirs = ['src/main/aidl']
+//            res.srcDirs = ['src/main/res']
+//            assets.srcDirs = ['src/main/assets']
+        }
+    }
+```
+
+最后，再来一张server端概览图：
+![](/imgs/WX20170808-141007.png)
+
+6) 我们接着些client端，拷贝server端aidl包下所有内容到client main文件夹下,不做任何改变，编译时同样可能出现找不到Music类，解决办法参考第5步：
+![](/imgs/WX20170808-141405.png)
+
+7) 编写客户端调用demo，创建xml文件,为了简单起见我这里只定义了两个按钮：
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/activity_main"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="cn.isif.android.client.MainActivity">
+
+    <Button
+        android:text="start"
+        android:onClick="onStart"
+        android:clickable="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <Button
+        android:text="stop"
+        android:onClick="onStop"
+        android:clickable="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true" />
+</RelativeLayout>
+
+```
+8) 在activity中实现调用
+
+```java
+package cn.isif.android.client;
+
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.os.RemoteException;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+
+import cn.isif.android.server.IMusicControlService;
+
+public class MainActivity extends AppCompatActivity {
+    public static final String TAG = "MainActivity";
+    private IMusicControlService iMusicControlService = null;
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            iMusicControlService = IMusicControlService.Stub.asInterface(iBinder);
+            Log.d(TAG,"连接成功！！！");
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            iMusicControlService = null;
+            Log.d(TAG,"已断开连接");
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //发起连接远程service
+        Intent intent = new Intent();
+        intent.setAction("cn.isif.TestServer");
+        intent.setComponent(new ComponentName("cn.isif.android.server", "cn.isif.android.server.TestService"));
+        bindService(intent,serviceConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    /**
+     * 调用远程方法
+     *
+     * @param view
+     */
+    public void onStart(View view){
+        try {
+            iMusicControlService.playMusic();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 调用远程方法
+     * 
+     * @param view
+     */
+    public void onStop(View view){
+        try {
+            iMusicControlService.stopMusic();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+
+```
+
+客户端概览图：
+
+![](/imgs/WX20170808-142113.png)
+
+至此该案例已完成！
