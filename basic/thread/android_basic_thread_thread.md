@@ -3,7 +3,6 @@
 
 线程化是允许多个活动共存于一个进程的一种工具。
 
-
 #### 1、线程的生命周期
 新建(New)、就绪（Runnable）、运行（Running）、阻塞(Blocked)和死亡(Dead)：
 
@@ -74,7 +73,7 @@ void join(long millis,int nanos)
 等待该线程终止的时间最长为 millis 毫秒 + nanos 纳秒。如果在millis时间内，该线程没有执行完，那么当前线程进入就绪状态，重新等待cpu调度
 
 例子：
-```java
+``` java
 public class Test1 {
     public static void main(String[] args) throws InterruptedException {
         MyThread thread=new MyThread();
@@ -103,7 +102,7 @@ class MyThread extends Thread {
 
 每个线程默认的优先级都与创建它的父线程具有相同的优先级，在默认情况下，main线程具有普通优先级。
 
-Thread类提供了setPriority(int newPriority)和getPriority()方法来设置和返回一个指定线程的优先级，其中setPriority方法的参数是一个整数，范围是1~·0之间，也可以使用Thread类提供的三个静态常量：
+Thread类提供了setPriority(int newPriority)和getPriority()方法来设置和返回一个指定线程的优先级，其中setPriority方法的参数是一个整数，范围是1\~·0之间，也可以使用Thread类提供的三个静态常量：
 ```java
 MAX_PRIORITY =10
 
@@ -135,7 +134,7 @@ public class Test1 {
 ```
 从结果可以看到 ，一般情况下，高级线程更显执行完毕。
 
-注意一点：虽然Java提供了10个优先级别，但这些优先级别需要操作系统的支持。不同的操作系统的优先级并不相同，而且也不能很好的和Java的10个优先级别对应。所以我们应该使用MAX_PRIORITY、MIN_PRIORITY和NORM_PRIORITY三个静态常量来设定优先级，这样才能保证程序最好的可移植性。
+注意一点：虽然Java提供了10个优先级别，但这些优先级别需要操作系统的支持。不同的操作系统的优先级并不相同，而且也不能很好的和Java的10个优先级别对应。所以我们应该使用MAX\_PRIORITY、MIN\_PRIORITY和NORM\_PRIORITY三个静态常量来设定优先级，这样才能保证程序最好的可移植性。
 
 #### 5、守护线程
 

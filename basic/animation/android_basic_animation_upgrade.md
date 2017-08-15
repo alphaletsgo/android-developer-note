@@ -2,7 +2,7 @@
 
 3.0以前，android支持两种动画模式，tween animation,frame animation，在android3.0中又引入了一个新的动画系统：property animation，这三种动画模式在SDK中被称为property animation,view animation,drawable animation。 可通过NineOldAndroids项目在3.0之前的系统中使用Property Animation.
 
-###1. View Animation（Tween Animation）
+### 1. View Animation（Tween Animation）
 
 **View Animation（Tween Animation）** 补间动画，给出两个关键帧，通过一些算法将给定属性值在给定的时间内在两个关键帧间渐变。
 
@@ -25,7 +25,7 @@ Animation hyperspaceJumpAnimation=AnimationUtils.loadAnimation(this, R.anim.hype
 spaceshipImage.startAnimation(hyperspaceJumpAnimation);
 ```
 
-###2. Drawable Animation（Frame Animation）
+### 2. Drawable Animation（Frame Animation）
 
 Drawable Animation（Frame Animation）：帧动画，就像GIF图片，通过一系列Drawable依次显示来模拟动画的效果。在XML中的定义方式如下：
 ```xml
@@ -75,7 +75,7 @@ protected void onCreate(Bundle savedInstanceState) {
 - 要在代码中调用Imageview的setBackgroundResource方法，如果直接在XML布局文件中设置其src属性当触发动画时会FC。在动画`start()`之前要先`stop()`，不然在第一次动画之后会停在最后一帧，这样动画就只会触发一次。
 - 最后一点是SDK中提到的，不要在onCreate中调用start，因为AnimationDrawable还没有完全跟Window相关联，如果想要界面显示时就开始动画的话，可以在`onWindowFoucsChanged()`中调用`start()`。
 
-###3. Property Animation
+### 3. Property Animation
 
 属性动画，这个是在Android 3.0中才引进的，以前学WPF时里面的动画机制好像就是这个，它更改的是对象的实际属性，在View Animation（Tween Animation）中，其改变的是View的绘制效果，真正的View的属性保持不变，比如无论你在对话中如何缩放Button的大小，Button的有效点击区域还是没有应用动画时的区域，其位置与大小都不变。而在Property Animation中，改变的是对象的实际属性，如Button的缩放，Button的位置与大小属性值都改变了。而且Property Animation不止可以应用于View，还可以应用于任何对象。Property Animation只是表示一个值在一段时间内的改变，当值改变时要做什么事情完全是你自己决定的。
 
@@ -93,7 +93,7 @@ protected void onCreate(Bundle savedInstanceState) {
 
 - Frame refreash delay：多少时间刷新一次，即每隔多少时间计算一次属性值，默认为10ms，最终刷新时间还受系统进程调度与硬件的影响
 ```
-####3.1 Property Animation的工作方式
+#### 3.1 Property Animation的工作方式
 
 对于下图的动画，这个对象的X坐标在40ms内从0移动到40 pixel.按默认的10ms刷新一次，这个对象会移动4次，每次移动40/4=10pixel。
 
@@ -128,7 +128,7 @@ public Float evaluate(float fraction, Number startValue, Number endValue) {
 ```
 参数分别为上一步的插值因子，开始值与结束值。
 
-####3.2 ValueAnimator
+#### 3.2 ValueAnimator
 
 ValueAnimator包含Property Animation动画的所有核心功能，如动画时间，开始、结束属性值，相应时间属性值计算方法等。应用Property Animation有两个步聚：
 
@@ -182,7 +182,7 @@ oa.addListener(new AnimatorListenerAdapter(){
 oa.start();
 ```
 
-####3.3 ObjectAnimator
+#### 3.3 ObjectAnimator
 
 继承自ValueAnimator，要指定一个对象及该对象的一个属性，当属性值计算完成时自动设置为该对象的相应属性，即完成了Property Animation的全部两步操作。实际应用中一般都会用ObjectAnimator来改变某一对象的某一属性，但用ObjectAnimator有一定的限制，要想使用ObjectAnimator，应该满足以下条件：
 
@@ -209,7 +209,7 @@ btn.setOnClickListener(new OnClickListener() {
 
 **根据应用动画的对象或属性的不同，可能需要在onAnimationUpdate函数中调用`invalidate()`函数刷新视图。**
 
-####3.4 通过AnimationSet应用多个动画
+#### 3.4 通过AnimationSet应用多个动画
 
 AnimationSet提供了一个把多个动画组合成一个组合的机制，并可设置组中动画的时序关系，如同时播放，顺序播放等。
 以下例子同时应用5个动画：
@@ -224,7 +224,7 @@ bouncer.play(anim5).after(amin2);
 animatorSet.start();
 ```
 
-####3.5 TypeEvalutors
+#### 3.5 TypeEvalutors
 
 根据属性的开始、结束值与TimeInterpolation计算出的因子计算出当前时间的属性值，android提供了以下几个evalutor：
 
@@ -247,7 +247,7 @@ public class FloatEvaluator implements TypeEvaluator {
 ```
 根据动画执行的时间跟应用的Interplator，会计算出一个0~1之间的因子，即evalute函数中的fraction参数，通过上述FloatEvaluator应该很好看出其意思。
 
-####3.6 TimeInterplator
+#### 3.6 TimeInterplator
 
 Time interplator定义了属性值变化的方式，如线性均匀改变，开始慢然后逐渐快等。在Property Animation中是TimeInterplator，在View Animation中是Interplator，这两个是一样的，在3.0之前只有Interplator，3.0之后实现代码转移至了TimeInterplator。Interplator继承自TimeInterplator，内部没有任何其他代码。
 
@@ -293,7 +293,7 @@ mTransitioner.setStagger(LayoutTransition.CHANGE_APPEARING, 30);
 ```
 此函数设置动画延迟时间，参数分别为类型与时间。
 
-####3.8 Keyframes
+#### 3.8 Keyframes
 
 keyFrame是一个 时间/值 对，通过它可以定义一个在特定时间的特定状态，即关键帧，而且在两个keyFrame之间可以定义不同的Interpolator，就好像多个动画的拼接，第一个动画的结束点是第二个动画的开始点。KeyFrame是抽象类，要通过`ofInt()`,`ofFloat()`,`ofObject()`获得适当的KeyFrame，然后通过`PropertyValuesHolder.ofKeyframe`获得PropertyValuesHolder对象，如以下例子：
 ```java
@@ -328,7 +328,7 @@ ObjectAnimator oa=ObjectAnimator.ofInt(btn2, "width", 400,200,400,100,500);
 oa.setDuration(2000);
 oa.start();
 ```
-####3.9 Animating Views
+#### 3.9 Animating Views
 
 在View Animation中，对View应用Animation并没有改变View的属性，动画的实现是通过其Parent View实现的，在View被drawn时Parents View改变它的绘制参数，draw后再改变参数invalidate，这样虽然View的大小或旋转角度等改变了，但View的实际属性没变，所以有效区域还是应用动画之前的区域，比如你把一按钮放大两倍，但还是放大这前的区域可以触发点击事件。为了改变这一点，在Android 3.0中给View增加了一些参数并对这些参数增加了相应的getter/setter函数（ObjectAnimator要用这些函数改变这些属性）：
 
@@ -398,7 +398,7 @@ set.setTarget(myObject);
 set.start();
 ```
 
-####3.10 ViewPropertyAnimator
+#### 3.10 ViewPropertyAnimator
 
 如果需要对一个View的多个属性进行动画可以用ViewPropertyAnimator类，该类对多属性动画进行了优化，会合并一些`invalidate()`来减少刷新视图，该类在3.1中引入。
 
