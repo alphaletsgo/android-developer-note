@@ -1,6 +1,0 @@
-# Content Provider
-
-
-
-ContentProvider在android中的作用是对外共享数据，也就是说你可以通过ContentProvider把应用中的数据共享给其他应用访问，其他应用可以通过ContentProvider对你应用中的数据进行添删改查
-
